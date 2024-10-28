@@ -14,6 +14,20 @@ from typing import (
 
 db = Database(Telegram.DATABASE_URL, Telegram.SESSION_NAME)
 
+async def gen_direct_link(_id, caption=None):
+    file_info = await db.get_file(_id)
+    file_name = caption if caption else file_info['file_name'] 
+    file_size = humanbytes(file_info['file_size'])
+    dlink = f"{Server.URL}dl/{_id}"
+    slink = f"{Server.URL}watch/{_id}"
+    stream_text = LANG.STREAM_TEXTG.format(file_name, file_size, dlink, slink) 
+    reply_markup = InlineKeyboardMarkup([
+        [InlineKeyboardButton("𝖲𝗍𝗋𝖾𝖺𝗆 🖥️", url=dlink),
+         InlineKeyboardButton("𝖣𝗈𝗐𝗇𝗅𝗈𝖺𝖽 📥", url=slink)],
+        [InlineKeyboardButton('✘ Cʟᴏsᴇ ✘', callback_data='close')],
+    ])
+    return reply_markup, stream_text, dlink, slink
+
 async def get_invite_link(bot, chat_id: Union[str, int]):
     try:
         invite_link = await bot.create_chat_invite_link(chat_id=chat_id)
