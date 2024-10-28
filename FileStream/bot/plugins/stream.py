@@ -1,7 +1,7 @@
 
 import asyncio
 from FileStream.bot import FileStream, multi_clients
-from FileStream.utils.bot_utils import is_user_banned, is_user_exist, is_user_joined, gen_link, is_channel_banned, is_channel_exist, is_user_authorized
+from FileStream.utils.bot_utils import is_user_banned, is_user_exist, is_user_joined, gen_link, gen_direct_link, is_channel_banned, is_channel_exist, is_user_authorized
 from FileStream.utils.database import Database
 from FileStream.utils.file_properties import get_file_ids, get_file_info
 from FileStream.config import Telegram
@@ -10,6 +10,44 @@ from pyrogram.errors import FloodWait
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram.enums.parse_mode import ParseMode
 db = Database(Telegram.DATABASE_URL, Telegram.SESSION_NAME)
+
+@FileStream.on_message(filters.command("link") | filters.regex("#link"))
+async def direct_link(b: Client, m: Message):
+ try:
+    msg = m.reply_to_message
+    if msg:
+       gk = await m.reply('**Gᴇɴᴇʀᴀᴛɪɴɢ Lɪɴᴋ 🔗...**')
+       media = msg.video or msg.document
+       caption = msg.caption or media.file_name
+       if not media:
+          galat = await gk.edit("**Tʜᴀᴛ's Nᴏᴛ Mᴇᴅɪᴀ Mʏ Fʀɪᴇɴᴅ 🙂**")
+          return 
+       try:
+          inserted_id = await db.add_file(get_file_info(msg))
+          await get_file_ids(False, inserted_id, multi_clients, msg)
+          reply_markup, stream_text, dlink, slink = await gen_direct_link(inserted_id, caption)
+          lelo = await gk.edit_text(
+                text=stream_text,
+                parse_mode=ParseMode.HTML,
+                disable_web_page_preview=True,
+                reply_markup=reply_markup
+          )
+          await lelo.reply(f"<code>{dlink}</code>")
+          return 
+            
+       except FloodWait as e:
+          print(f"Sleeping for {str(e.value)}s")
+          sleep(e.value)
+          return await direct_link(b, m)
+          
+    else:
+         g = await m.reply("**Rᴇᴘʟʏ Tᴏ A Mᴇᴅɪᴀ Gᴇᴛ Iᴛ's Dɪʀᴇᴄᴛ Dᴏᴡɴʟᴏᴀᴅ Lɪɴᴋ 🖇️**")
+         return 
+         
+ except Exception as e:
+      print(e)
+      pass
+
 
 @FileStream.on_message(
     filters.private
