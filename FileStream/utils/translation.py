@@ -70,3 +70,4 @@ class BUTTON(object):
             [InlineKeyboardButton("📢 ᴜᴘᴅᴀᴛᴇ ᴄʜᴀɴɴᴇʟ", url=f'https://t.me/{Telegram.UPDATES_CHANNEL}')]
         ]
     )
+    STREAM_TEXTG = """<b>•📁 Fɪʟᴇ Nᴀᴍᴇ:</b> <code>{}</code>\n\n<b>•💾 Fɪʟᴇ Sɪᴢᴇ:</b> <code>{}</code>\n\n<b>Sᴛʀᴇᴀᴍ 🖥 </b>: <code>{}</code>\n\n<b>Dᴏᴡɴʟᴏᴀᴅ 📥 :</b> <code>{}</code>\n\n<b>•🔗 Lᴇᴇᴄʜ Lɪɴᴋ: ⬇️</b>"""
