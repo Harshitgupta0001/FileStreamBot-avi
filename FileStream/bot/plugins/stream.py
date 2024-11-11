@@ -11,6 +11,48 @@ from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram.enums.parse_mode import ParseMode
 db = Database(Telegram.DATABASE_URL, Telegram.SESSION_NAME)
 
+
+@FileStream.on_message(
+    filters.group
+    & filters.reply
+    & (
+        filters.document
+        | filters.video
+        | filters.audio
+        | filters.voice
+        | filters.photo
+    )
+)
+async def group_receive_handler(bot: Client, message: Message):
+    # Check if the reply message has media and if the user is authorized (optional)
+    if not message.reply_to_message or not await is_user_authorized(message):
+        return
+
+    try:
+        # Insert the file in the database and get the generated download link
+        inserted_id = await db.add_file(get_file_info(message.reply_to_message))
+        await get_file_ids(False, inserted_id, multi_clients, message.reply_to_message)
+        reply_markup, stream_text = await gen_link(_id=inserted_id)
+
+        # Send the generated link as a reply in the group
+        await message.reply_text(
+            text=stream_text,
+            parse_mode=ParseMode.HTML,
+            disable_web_page_preview=True,
+            reply_markup=reply_markup,
+            quote=True
+        )
+    except FloodWait as e:
+        print(f"Sleeping for {str(e.value)}s due to FloodWait")
+        await asyncio.sleep(e.value)
+        await bot.send_message(
+            chat_id=Telegram.ULOG_CHANNEL,
+            text=f"FloodWait of {str(e.value)}s from [{message.from_user.first_name}](tg://user?id={message.from_user.id}) in group",
+            disable_web_page_preview=True,
+            parse_mode=ParseMode.MARKDOWN
+        )
+
+
 @FileStream.on_message(
     filters.private
     & (
